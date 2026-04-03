@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriYield Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loader-card">
+            <div class="spinner"></div>
+            <h3>Generating Prediction...</h3>
+            <p>Please wait while the model analyzes your inputs.</p>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-brand">🌾 AgriYield Predictor</div>
+        <div class="nav-links">
+            <button type="button" class="nav-btn active" onclick="showSection('home')">Home</button>
+            <button type="button" class="nav-btn" onclick="showSection('predict')">Predict</button>
+            <button type="button" class="nav-btn" onclick="showSection('results')">Results</button>
+            <button type="button" class="nav-btn" onclick="showSection('insights')">Insights</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- HOME -->
+        <section id="home" class="page-section active-section">
+            <div class="hero-glass">
+                <div class="hero-content">
+                    <span class="hero-badge">AI + Agriculture Intelligence</span>
+                    <h1>AI-Powered Crop Yield Prediction</h1>
+                    <p>
+                        Estimate crop yield and total production using crop details, rainfall,
+                        temperature, humidity, soil type, nutrient values, and land area.
+                    </p>
+
+                    <div class="hero-points">
+                        <div class="mini-info-card">
+                            <h4>Yield Estimation</h4>
+                            <p>Predict expected yield per hectare using real field inputs.</p>
+                        </div>
+                        <div class="mini-info-card">
+                            <h4>Production Forecast</h4>
+                            <p>Calculate total expected production based on land area.</p>
+                        </div>
+                        <div class="mini-info-card">
+                            <h4>Farmer-Friendly</h4>
+                            <p>Supports optional NPK auto-estimation from historical averages.</p>
+                        </div>
+                    </div>
+
+                    <div class="hero-buttons">
+                        <button type="button" class="btn-primary" onclick="showSection('predict')">Start Prediction</button>
+                        <button type="button" class="btn-secondary" onclick="showSection('insights')">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header">
+                    <h2>How It Works</h2>
+                    <p>A simple 3-step process designed for easy use.</p>
+                </div>
+
+                <div class="workflow-grid">
+                    <div class="workflow-card">
+                        <div class="step-number">1</div>
+                        <h3>Enter Farm Details</h3>
+                        <p>Select the crop, state, environmental conditions, soil type, and nutrients.</p>
+                    </div>
+                    <div class="workflow-card">
+                        <div class="step-number">2</div>
+                        <h3>Generate Prediction</h3>
+                        <p>The system analyzes your inputs and estimates crop yield and production.</p>
+                    </div>
+                    <div class="workflow-card">
+                        <div class="step-number">3</div>
+                        <h3>View Report & Insights</h3>
+                        <p>Check the prediction, understand key drivers, and download a PDF report.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header">
+                    <h2>Why Use This Tool?</h2>
+                    <p>Built to make yield estimation easier, quicker, and more understandable.</p>
+                </div>
+
+                <div class="benefit-grid">
+                    <div class="benefit-card">
+                        <h4>📊 AI-Based Forecast</h4>
+                        <p>Uses trained machine learning logic to estimate agricultural output from input factors.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h4>🌦 Climate-Aware</h4>
+                        <p>Rainfall, temperature, and humidity are considered during prediction.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h4>🌱 Soil-Aware</h4>
+                        <p>Includes soil type, pH, and nutrients to improve agricultural relevance.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <h4>📄 PDF Ready</h4>
+                        <p>Generate a downloadable report containing your prediction and project explanation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-strip">
+                <div class="stat-box">
+                    <h3>AI</h3>
+                    <p>Prediction-driven workflow</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Area</h3>
+                    <p>Production estimate included</p>
+                </div>
+                <div class="stat-box">
+                    <h3>PDF</h3>
+                    <p>Downloadable report output</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PREDICT -->
+        <section id="predict" class="page-section">
+            <div class="card">
+                <div class="section-header">
+                    <h2>Enter Prediction Details</h2>
+                    <p>Provide agricultural conditions to estimate crop yield and production.</p>
+                </div>
+
+                <div class="progress-strip">
+                    <div class="progress-step active">1. Enter Details</div>
+                    <div class="progress-step">2. Predict Yield</div>
+                    <div class="progress-step">3. View Results</div>
+                </div>
+
+                {% if error_text %}
+                <div class="error-banner">
+                    <h3>Prediction Error</h3>
+                    <p>{{ error_text }}</p>
+                </div>
+                {% endif %}
+
+                {% if debug_text %}
+                <div class="debug-banner">
+                    <h3>Debug Details</h3>
+                    <pre>{{ debug_text }}</pre>
+                </div>
+                {% endif %}
+
+                <form action="/predict" method="post" class="prediction-form" onsubmit="showLoading()">
+
+                    <div class="section-box">
+                        <div class="title-row">
+                            <h3 class="section-title">🌾 Crop Details</h3>
+                            <span class="section-tag">Basic Information</span>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="state">State</label>
+                                <select id="state" name="state" required>
+                                    <option value="">Select State</option>
+                                    <option value="Andhra Pradesh" {% if form_data and form_data.get('state') == 'Andhra Pradesh' %}selected{% endif %}>Andhra Pradesh</option>
+                                    <option value="Arunachal Pradesh" {% if form_data and form_data.get('state') == 'Arunachal Pradesh' %}selected{% endif %}>Arunachal Pradesh</option>
+                                    <option value="Assam" {% if form_data and form_data.get('state') == 'Assam' %}selected{% endif %}>Assam</option>
+                                    <option value="Bihar" {% if form_data and form_data.get('state') == 'Bihar' %}selected{% endif %}>Bihar</option>
+                                    <option value="Chhattisgarh" {% if form_data and form_data.get('state') == 'Chhattisgarh' %}selected{% endif %}>Chhattisgarh</option>
+                                    <option value="Delhi" {% if form_data and form_data.get('state') == 'Delhi' %}selected{% endif %}>Delhi</option>
+                                    <option value="Goa" {% if form_data and form_data.get('state') == 'Goa' %}selected{% endif %}>Goa</option>
+                                    <option value="Gujarat" {% if form_data and form_data.get('state') == 'Gujarat' %}selected{% endif %}>Gujarat</option>
+                                    <option value="Haryana" {% if form_data and form_data.get('state') == 'Haryana' %}selected{% endif %}>Haryana</option>
+                                    <option value="Himachal Pradesh" {% if form_data and form_data.get('state') == 'Himachal Pradesh' %}selected{% endif %}>Himachal Pradesh</option>
+                                    <option value="Jammu and Kashmir" {% if form_data and form_data.get('state') == 'Jammu and Kashmir' %}selected{% endif %}>Jammu and Kashmir</option>
+                                    <option value="Jharkhand" {% if form_data and form_data.get('state') == 'Jharkhand' %}selected{% endif %}>Jharkhand</option>
+                                    <option value="Karnataka" {% if form_data and form_data.get('state') == 'Karnataka' %}selected{% endif %}>Karnataka</option>
+                                    <option value="Kerala" {% if form_data and form_data.get('state') == 'Kerala' %}selected{% endif %}>Kerala</option>
+                                    <option value="Madhya Pradesh" {% if form_data and form_data.get('state') == 'Madhya Pradesh' %}selected{% endif %}>Madhya Pradesh</option>
+                                    <option value="Maharashtra" {% if form_data and form_data.get('state') == 'Maharashtra' %}selected{% endif %}>Maharashtra</option>
+                                    <option value="Manipur" {% if form_data and form_data.get('state') == 'Manipur' %}selected{% endif %}>Manipur</option>
+                                    <option value="Meghalaya" {% if form_data and form_data.get('state') == 'Meghalaya' %}selected{% endif %}>Meghalaya</option>
+                                    <option value="Mizoram" {% if form_data and form_data.get('state') == 'Mizoram' %}selected{% endif %}>Mizoram</option>
+                                    <option value="Nagaland" {% if form_data and form_data.get('state') == 'Nagaland' %}selected{% endif %}>Nagaland</option>
+                                    <option value="Odisha" {% if form_data and form_data.get('state') == 'Odisha' %}selected{% endif %}>Odisha</option>
+                                    <option value="Puducherry" {% if form_data and form_data.get('state') == 'Puducherry' %}selected{% endif %}>Puducherry</option>
+                                    <option value="Punjab" {% if form_data and form_data.get('state') == 'Punjab' %}selected{% endif %}>Punjab</option>
+                                    <option value="Sikkim" {% if form_data and form_data.get('state') == 'Sikkim' %}selected{% endif %}>Sikkim</option>
+                                    <option value="Tamil Nadu" {% if form_data and form_data.get('state') == 'Tamil Nadu' %}selected{% endif %}>Tamil Nadu</option>
+                                    <option value="Telangana" {% if form_data and form_data.get('state') == 'Telangana' %}selected{% endif %}>Telangana</option>
+                                    <option value="Tripura" {% if form_data and form_data.get('state') == 'Tripura' %}selected{% endif %}>Tripura</option>
+                                    <option value="Uttar Pradesh" {% if form_data and form_data.get('state') == 'Uttar Pradesh' %}selected{% endif %}>Uttar Pradesh</option>
+                                    <option value="Uttarakhand" {% if form_data and form_data.get('state') == 'Uttarakhand' %}selected{% endif %}>Uttarakhand</option>
+                                    <option value="West Bengal" {% if form_data and form_data.get('state') == 'West Bengal' %}selected{% endif %}>West Bengal</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="crop">Crop</label>
+                                <select id="crop" name="crop" required>
+                                    <option value="">Select Crop</option>
+                                    <option value="arecanut" {% if form_data and form_data.get('crop') == 'arecanut' %}selected{% endif %}>Arecanut</option>
+                                    <option value="arhar/tur" {% if form_data and form_data.get('crop') == 'arhar/tur' %}selected{% endif %}>Arhar/Tur</option>
+                                    <option value="bajra" {% if form_data and form_data.get('crop') == 'bajra' %}selected{% endif %}>Bajra</option>
+                                    <option value="banana" {% if form_data and form_data.get('crop') == 'banana' %}selected{% endif %}>Banana</option>
+                                    <option value="barley" {% if form_data and form_data.get('crop') == 'barley' %}selected{% endif %}>Barley</option>
+                                    <option value="black pepper" {% if form_data and form_data.get('crop') == 'black pepper' %}selected{% endif %}>Black Pepper</option>
+                                    <option value="cardamom" {% if form_data and form_data.get('crop') == 'cardamom' %}selected{% endif %}>Cardamom</option>
+                                    <option value="cashewnut" {% if form_data and form_data.get('crop') == 'cashewnut' %}selected{% endif %}>Cashewnut</option>
+                                    <option value="castor seed" {% if form_data and form_data.get('crop') == 'castor seed' %}selected{% endif %}>Castor Seed</option>
+                                    <option value="coconut" {% if form_data and form_data.get('crop') == 'coconut' %}selected{% endif %}>Coconut</option>
+                                    <option value="coriander" {% if form_data and form_data.get('crop') == 'coriander' %}selected{% endif %}>Coriander</option>
+                                    <option value="cotton(lint)" {% if form_data and form_data.get('crop') == 'cotton(lint)' %}selected{% endif %}>Cotton (Lint)</option>
+                                    <option value="cowpea(lobia)" {% if form_data and form_data.get('crop') == 'cowpea(lobia)' %}selected{% endif %}>Cowpea (Lobia)</option>
+                                    <option value="dry chillies" {% if form_data and form_data.get('crop') == 'dry chillies' %}selected{% endif %}>Dry Chillies</option>
+                                    <option value="garlic" {% if form_data and form_data.get('crop') == 'garlic' %}selected{% endif %}>Garlic</option>
+                                    <option value="ginger" {% if form_data and form_data.get('crop') == 'ginger' %}selected{% endif %}>Ginger</option>
+                                    <option value="gram" {% if form_data and form_data.get('crop') == 'gram' %}selected{% endif %}>Gram</option>
+                                    <option value="groundnut" {% if form_data and form_data.get('crop') == 'groundnut' %}selected{% endif %}>Groundnut</option>
+                                    <option value="guar seed" {% if form_data and form_data.get('crop') == 'guar seed' %}selected{% endif %}>Guar Seed</option>
+                                    <option value="horse-gram" {% if form_data and form_data.get('crop') == 'horse-gram' %}selected{% endif %}>Horse Gram</option>
+                                    <option value="jowar" {% if form_data and form_data.get('crop') == 'jowar' %}selected{% endif %}>Jowar</option>
+                                    <option value="jute" {% if form_data and form_data.get('crop') == 'jute' %}selected{% endif %}>Jute</option>
+                                    <option value="khesari" {% if form_data and form_data.get('crop') == 'khesari' %}selected{% endif %}>Khesari</option>
+                                    <option value="linseed" {% if form_data and form_data.get('crop') == 'linseed' %}selected{% endif %}>Linseed</option>
+                                    <option value="maize" {% if form_data and form_data.get('crop') == 'maize' %}selected{% endif %}>Maize</option>
+                                    <option value="masoor" {% if form_data and form_data.get('crop') == 'masoor' %}selected{% endif %}>Masoor</option>
+                                    <option value="mesta" {% if form_data and form_data.get('crop') == 'mesta' %}selected{% endif %}>Mesta</option>
+                                    <option value="moong(green gram)" {% if form_data and form_data.get('crop') == 'moong(green gram)' %}selected{% endif %}>Moong (Green Gram)</option>
+                                    <option value="moth" {% if form_data and form_data.get('crop') == 'moth' %}selected{% endif %}>Moth</option>
+                                    <option value="niger seed" {% if form_data and form_data.get('crop') == 'niger seed' %}selected{% endif %}>Niger Seed</option>
+                                    <option value="oilseeds total" {% if form_data and form_data.get('crop') == 'oilseeds total' %}selected{% endif %}>Oilseeds Total</option>
+                                    <option value="onion" {% if form_data and form_data.get('crop') == 'onion' %}selected{% endif %}>Onion</option>
+                                    <option value="other  rabi pulses" {% if form_data and form_data.get('crop') == 'other  rabi pulses' %}selected{% endif %}>Other Rabi Pulses</option>
+                                    <option value="other cereals" {% if form_data and form_data.get('crop') == 'other cereals' %}selected{% endif %}>Other Cereals</option>
+                                    <option value="other kharif pulses" {% if form_data and form_data.get('crop') == 'other kharif pulses' %}selected{% endif %}>Other Kharif Pulses</option>
+                                    <option value="other oilseeds" {% if form_data and form_data.get('crop') == 'other oilseeds' %}selected{% endif %}>Other Oilseeds</option>
+                                    <option value="other summer pulses" {% if form_data and form_data.get('crop') == 'other summer pulses' %}selected{% endif %}>Other Summer Pulses</option>
+                                    <option value="peas & beans (pulses)" {% if form_data and form_data.get('crop') == 'peas & beans (pulses)' %}selected{% endif %}>Peas & Beans (Pulses)</option>
+                                    <option value="potato" {% if form_data and form_data.get('crop') == 'potato' %}selected{% endif %}>Potato</option>
+                                    <option value="ragi" {% if form_data and form_data.get('crop') == 'ragi' %}selected{% endif %}>Ragi</option>
+                                    <option value="rapeseed &mustard" {% if form_data and form_data.get('crop') == 'rapeseed &mustard' %}selected{% endif %}>Rapeseed & Mustard</option>
+                                    <option value="rice" {% if form_data and form_data.get('crop') == 'rice' %}selected{% endif %}>Rice</option>
+                                    <option value="safflower" {% if form_data and form_data.get('crop') == 'safflower' %}selected{% endif %}>Safflower</option>
+                                    <option value="sannhamp" {% if form_data and form_data.get('crop') == 'sannhamp' %}selected{% endif %}>Sannhamp</option>
+                                    <option value="sesamum" {% if form_data and form_data.get('crop') == 'sesamum' %}selected{% endif %}>Sesamum</option>
+                                    <option value="small millets" {% if form_data and form_data.get('crop') == 'small millets' %}selected{% endif %}>Small Millets</option>
+                                    <option value="soyabean" {% if form_data and form_data.get('crop') == 'soyabean' %}selected{% endif %}>Soyabean</option>
+                                    <option value="sugarcane" {% if form_data and form_data.get('crop') == 'sugarcane' %}selected{% endif %}>Sugarcane</option>
+                                    <option value="sunflower" {% if form_data and form_data.get('crop') == 'sunflower' %}selected{% endif %}>Sunflower</option>
+                                    <option value="sweet potato" {% if form_data and form_data.get('crop') == 'sweet potato' %}selected{% endif %}>Sweet Potato</option>
+                                    <option value="tapioca" {% if form_data and form_data.get('crop') == 'tapioca' %}selected{% endif %}>Tapioca</option>
+                                    <option value="tobacco" {% if form_data and form_data.get('crop') == 'tobacco' %}selected{% endif %}>Tobacco</option>
+                                    <option value="turmeric" {% if form_data and form_data.get('crop') == 'turmeric' %}selected{% endif %}>Turmeric</option>
+                                    <option value="urad" {% if form_data and form_data.get('crop') == 'urad' %}selected{% endif %}>Urad</option>
+                                    <option value="wheat" {% if form_data and form_data.get('crop') == 'wheat' %}selected{% endif %}>Wheat</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="title-row">
+                            <h3 class="section-title">🌦 Environmental Conditions</h3>
+                            <span class="section-tag">Climate Inputs</span>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="rainfall">Rainfall (mm)</label>
+                                <input type="number" step="any" id="rainfall" name="rainfall" placeholder="e.g. 1200" value="{{ form_data.get('rainfall', '') if form_data else '' }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="temperature">Average Temperature (°C)</label>
+                                <input type="number" step="any" id="temperature" name="temperature" placeholder="e.g. 28" value="{{ form_data.get('temperature', '') if form_data else '' }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="humidity">Humidity (%)</label>
+                                <input type="number" step="any" id="humidity" name="humidity" placeholder="e.g. 75" value="{{ form_data.get('humidity', '') if form_data else '' }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="area">Land Area (hectares)</label>
+                                <input type="number" step="any" id="area" name="area" placeholder="e.g. 2" value="{{ form_data.get('area', '') if form_data else '' }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="title-row">
+                            <h3 class="section-title">🌱 Soil & Nutrients</h3>
+                            <span class="section-tag">Soil Health</span>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="soil_type">Soil Type</label>
+                                <select id="soil_type" name="soil_type" required>
+                                    <option value="">Select Soil Type</option>
+                                    <option value="Alluvial Soil" {% if form_data and form_data.get('soil_type') == 'Alluvial Soil' %}selected{% endif %}>Alluvial Soil</option>
+                                    <option value="Black Soil" {% if form_data and form_data.get('soil_type') == 'Black Soil' %}selected{% endif %}>Black Soil</option>
+                                    <option value="Red Soil" {% if form_data and form_data.get('soil_type') == 'Red Soil' %}selected{% endif %}>Red Soil</option>
+                                    <option value="Laterite Soil" {% if form_data and form_data.get('soil_type') == 'Laterite Soil' %}selected{% endif %}>Laterite Soil</option>
+                                    <option value="Coastal Alluvial Soil" {% if form_data and form_data.get('soil_type') == 'Coastal Alluvial Soil' %}selected{% endif %}>Coastal Alluvial Soil</option>
+                                    <option value="Clay Soil" {% if form_data and form_data.get('soil_type') == 'Clay Soil' %}selected{% endif %}>Clay Soil</option>
+                                    <option value="Sandy Soil" {% if form_data and form_data.get('soil_type') == 'Sandy Soil' %}selected{% endif %}>Sandy Soil</option>
+                                    <option value="Loamy Soil" {% if form_data and form_data.get('soil_type') == 'Loamy Soil' %}selected{% endif %}>Loamy Soil</option>
+                                    <option value="Sandy Loam" {% if form_data and form_data.get('soil_type') == 'Sandy Loam' %}selected{% endif %}>Sandy Loam</option>
+                                    <option value="Clayey" {% if form_data and form_data.get('soil_type') == 'Clayey' %}selected{% endif %}>Clayey</option>
+                                    <option value="Black cotton soil" {% if form_data and form_data.get('soil_type') == 'Black cotton soil' %}selected{% endif %}>Black cotton soil</option>
+                                    <option value="Red loamy soil" {% if form_data and form_data.get('soil_type') == 'Red loamy soil' %}selected{% endif %}>Red loamy soil</option>
+                                    <option value="Lateritic soil" {% if form_data and form_data.get('soil_type') == 'Lateritic soil' %}selected{% endif %}>Lateritic soil</option>
+                                    <option value="Alluvial & Laterite Soil" {% if form_data and form_data.get('soil_type') == 'Alluvial & Laterite Soil' %}selected{% endif %}>Alluvial & Laterite Soil</option>
+                                    <option value="Black & Alluvial Soil" {% if form_data and form_data.get('soil_type') == 'Black & Alluvial Soil' %}selected{% endif %}>Black & Alluvial Soil</option>
+                                    <option value="Laterite & Alluvial Soil" {% if form_data and form_data.get('soil_type') == 'Laterite & Alluvial Soil' %}selected{% endif %}>Laterite & Alluvial Soil</option>
+                                    <option value="Laterite & Red Soil" {% if form_data and form_data.get('soil_type') == 'Laterite & Red Soil' %}selected{% endif %}>Laterite & Red Soil</option>
+                                    <option value="Red & Black Soil" {% if form_data and form_data.get('soil_type') == 'Red & Black Soil' %}selected{% endif %}>Red & Black Soil</option>
+                                    <option value="Red & Laterite Soil" {% if form_data and form_data.get('soil_type') == 'Red & Laterite Soil' %}selected{% endif %}>Red & Laterite Soil</option>
+                                    <option value="Red & Yellow Soil" {% if form_data and form_data.get('soil_type') == 'Red & Yellow Soil' %}selected{% endif %}>Red & Yellow Soil</option>
+                                    <option value="Mountain Soil" {% if form_data and form_data.get('soil_type') == 'Mountain Soil' %}selected{% endif %}>Mountain Soil</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pH">pH</label>
+                                <input type="number" step="any" id="pH" name="pH" placeholder="e.g. 6.5" value="{{ form_data.get('pH', '') if form_data else '' }}" required>
+                            </div>
+
+                            <div class="form-group full-width checkbox-wrap">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="unknown_npk" name="unknown_npk" value="yes" {% if form_data and form_data.get('unknown_npk') == 'yes' %}checked{% endif %}>
+                                    I don’t know NPK values
+                                </label>
+                                <small>If selected, NPK values will be estimated automatically from historical data.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="N">Nitrogen (N)</label>
+                                <input type="number" step="any" id="N" name="N" placeholder="e.g. 90" value="{{ form_data.get('N', '') if form_data else '' }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="P">Phosphorus (P)</label>
+                                <input type="number" step="any" id="P" name="P" placeholder="e.g. 40" value="{{ form_data.get('P', '') if form_data else '' }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="K">Potassium (K)</label>
+                                <input type="number" step="any" id="K" name="K" placeholder="e.g. 40" value="{{ form_data.get('K', '') if form_data else '' }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tips-strip">
+                        <div class="tip-chip">Use real field values when possible</div>
+                        <div class="tip-chip">Keep temperature in °C</div>
+                        <div class="tip-chip">Land area should be in hectares</div>
+                    </div>
+
+                    <div class="action-row">
+                        <button type="submit" class="btn-primary">Predict Yield</button>
+                        <button type="button" class="btn-secondary" onclick="window.location.href='/'">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- RESULTS -->
+        {% if prediction_text %}
+        <section id="results" class="page-section">
+            <div class="card">
+                <div class="section-header">
+                    <h2>Prediction Results</h2>
+                    <p>Your AI-generated crop yield and total production estimate.</p>
+                </div>
+
+                <div class="result-grid">
+                    <div class="result-box yield-box">
+                        <span class="result-badge">Yield per Hectare</span>
+                        <h4>Predicted Yield</h4>
+                        <h2 class="count-up" data-target="{{ prediction_text }}">0</h2>
+                        <p>tons/hectare</p>
+                    </div>
+
+                    <div class="result-box production-box">
+                        <span class="result-badge blue">Area-based Output</span>
+                        <h4>Estimated Total Production</h4>
+                        <h2 class="count-up" data-target="{{ production_text }}">0</h2>
+                        <p>tons</p>
+                    </div>
+                </div>
+
+                <div class="premium-compare-card">
+                    <div class="compare-head">
+                        <h3>Prediction Highlights</h3>
+                        <span class="compare-badge">AI Summary</span>
+                    </div>
+
+                    <div class="compare-row">
+                        <div class="compare-label">
+                            <span>Yield Prediction</span>
+                            <strong>{{ prediction_text }} tons/hectare</strong>
+                        </div>
+                        <div class="compare-track">
+                            <div class="compare-fill green-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="compare-row">
+                        <div class="compare-label">
+                            <span>Production Estimate</span>
+                            <strong>{{ production_text }} tons</strong>
+                        </div>
+                        <div class="compare-track">
+                            <div class="compare-fill blue-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h4>Selected Crop</h4>
+                        <p>{{ form_data.crop if form_data else '-' }}</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Selected State</h4>
+                        <p>{{ form_data.state if form_data else '-' }}</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Soil Type</h4>
+                        <p>{{ form_data.soil_type if form_data else '-' }}</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Land Area</h4>
+                        <p>{{ form_data.area if form_data else '-' }} hectares</p>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>Recommendation Snapshot</h3>
+                    <p>
+                        Based on the selected environmental and soil conditions, this prediction suggests that the current setup may support agricultural production for the chosen crop.
+                    </p>
+                </div>
+
+                <div class="result-note">
+                    <strong>Note:</strong> Total production is estimated using predicted yield and the land area you entered.
+                </div>
+
+                <form method="POST" action="/download">
+                    <input type="hidden" name="state" value="{{ form_data.state if form_data else '' }}">
+                    <input type="hidden" name="crop" value="{{ form_data.crop if form_data else '' }}">
+                    <input type="hidden" name="rainfall" value="{{ form_data.rainfall if form_data else '' }}">
+                    <input type="hidden" name="temperature" value="{{ form_data.temperature if form_data else '' }}">
+                    <input type="hidden" name="humidity" value="{{ form_data.humidity if form_data else '' }}">
+                    <input type="hidden" name="soil_type" value="{{ form_data.soil_type if form_data else '' }}">
+                    <input type="hidden" name="pH" value="{{ form_data.pH if form_data else '' }}">
+                    <input type="hidden" name="N" value="{{ form_data.N if form_data else '' }}">
+                    <input type="hidden" name="P" value="{{ form_data.P if form_data else '' }}">
+                    <input type="hidden" name="K" value="{{ form_data.K if form_data else '' }}">
+                    <input type="hidden" name="area" value="{{ form_data.area if form_data else '' }}">
+                    <input type="hidden" name="prediction" value="{{ prediction_text }}">
+                    <input type="hidden" name="production" value="{{ production_text }}">
+                    <input type="hidden" name="insight" value="{{ insights.explanation if insights else '' }}">
+                    <button class="download-btn" type="submit">Download PDF Report</button>
+                </form>
+            </div>
+        </section>
+        {% else %}
+        <section id="results" class="page-section">
+            <div class="card empty-state-card">
+                <h2>Prediction Results</h2>
+                <p>No prediction yet. Go to the Predict section and enter farm details to generate results.</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- INSIGHTS -->
+        {% if prediction_text %}
+        <section id="insights" class="page-section">
+            <div class="card">
+                <div class="section-header">
+                    <h2>AI Insights & Explanation</h2>
+                    <p>Simple explanation of how the prediction is influenced.</p>
+                </div>
+
+                <div class="insight-grid">
+                    <div class="section-box">
+                        <h4>📌 Feature Importance</h4>
+                        <ul class="feature-list">
+                            <li><span class="dot high"></span> Rainfall — High Impact</li>
+                            <li><span class="dot high"></span> Temperature — High Impact</li>
+                            <li><span class="dot med"></span> Soil Type — Medium Impact</li>
+                            <li><span class="dot med"></span> NPK Values — Medium Impact</li>
+                            <li><span class="dot med"></span> Humidity — Medium Impact</li>
+                        </ul>
+                    </div>
+
+                    <div class="section-box">
+                        <h4>🧠 Prediction Explanation</h4>
+                        <p>{{ insights.explanation if insights else 'Higher rainfall and suitable soil conditions likely increased the predicted yield.' }}</p>
+                    </div>
+                </div>
+
+                <div class="three-info-grid">
+                    <div class="info-panel">
+                        <h4>🌦 Key Drivers</h4>
+                        <p>Rainfall, temperature, and selected soil type are major contributors to the predicted output.</p>
+                    </div>
+                    <div class="info-panel">
+                        <h4>🚜 Farmer Interpretation</h4>
+                        <p>This result can be used as an estimate to understand expected productivity before planning crop operations.</p>
+                    </div>
+                    <div class="info-panel">
+                        <h4>📘 Important Note</h4>
+                        <p>If NPK values were not manually entered, they may have been estimated from historical averages.</p>
+                    </div>
+                </div>
+
+                <div class="insight-extra">
+                    <div class="insight-pill">Climate-sensitive prediction</div>
+                    <div class="insight-pill">Soil-aware estimate</div>
+                    <div class="insight-pill">Farmer-friendly report generation</div>
+                </div>
+            </div>
+        </section>
+        {% else %}
+        <section id="insights" class="page-section">
+            <div class="card empty-state-card">
+                <h2>AI Insights & Explanation</h2>
+                <p>Feature importance and prediction explanation will appear after you generate a result.</p>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll(".page-section");
+            sections.forEach(section => section.classList.remove("active-section"));
+
+            const buttons = document.querySelectorAll(".nav-btn");
+            buttons.forEach(btn => btn.classList.remove("active"));
+
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.add("active-section");
+            }
+
+            const clickedBtn = Array.from(buttons).find(btn =>
+                btn.getAttribute("onclick") && btn.getAttribute("onclick").includes(sectionId)
+            );
+            if (clickedBtn) {
+                clickedBtn.classList.add("active");
+            }
+        }
+
+        function toggleNPKFields() {
+            const unknown = document.getElementById("unknown_npk");
+            const nField = document.getElementById("N");
+            const pField = document.getElementById("P");
+            const kField = document.getElementById("K");
+
+            if (!unknown || !nField || !pField || !kField) return;
+
+            if (unknown.checked) {
+                nField.disabled = true;
+                pField.disabled = true;
+                kField.disabled = true;
+                nField.required = false;
+                pField.required = false;
+                kField.required = false;
+            } else {
+                nField.disabled = false;
+                pField.disabled = false;
+                kField.disabled = false;
+                nField.required = true;
+                pField.required = true;
+                kField.required = true;
+            }
+        }
+
+        function showLoading() {
+            const overlay = document.getElementById("loadingOverlay");
+            if (overlay) {
+                overlay.classList.remove("hidden");
+            }
+        }
+
+        function animateCountUps() {
+            const counters = document.querySelectorAll(".count-up");
+
+            counters.forEach(counter => {
+                const target = parseFloat(counter.getAttribute("data-target")) || 0;
+                const duration = 1200;
+                const startTime = performance.now();
+
+                function update(now) {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const value = target * progress;
+                    counter.textContent = value.toFixed(2);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        counter.textContent = target.toFixed(2);
+                    }
+                }
+
+                requestAnimationFrame(update);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleNPKFields();
+            const unknownBox = document.getElementById("unknown_npk");
+            if (unknownBox) {
+                unknownBox.addEventListener("change", toggleNPKFields);
+            }
+
+            {% if prediction_text %}
+                showSection('results');
+                animateCountUps();
+            {% elif error_text %}
+                showSection('predict');
+            {% elif form_data %}
+                showSection('predict');
+            {% else %}
+                showSection('home');
+            {% endif %}
+        });
+    </script>
+
+</body>
+</html>
